@@ -28,7 +28,7 @@ const locales = {
 const localizer = dateFnsLocalizer({
   format,
   parse,
-  startOfWeek,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }), // Inizia la settimana di lunedì
   getDay,
   locales,
 });
@@ -123,41 +123,70 @@ function CalendarioPartite() {
   };
 
   return (
-    <Paper sx={{ padding: 2, margin: 2 }}>
-      <Typography variant="h5" gutterBottom>
+    <Paper sx={{ padding: 2, margin: 2, backgroundColor: '#fff8e1' }}> {/* Sfondo giallo chiaro */}
+      <Typography variant="h5" gutterBottom sx={{ color: '#00695c', fontFamily: 'Shadows Into Light, cursive' }}>
         Calendario Partite
       </Typography>
       <Calendar
-        localizer={localizer}
-        events={eventi}
-        startAccessor="start"
-        endAccessor="end"
-        selectable
-        onSelectSlot={handleSelectSlot}
-        onSelectEvent={handleEventClick}
-        style={{ height: 600 }}
-        views={['month', 'week', 'day']}
-        defaultView="month"
-        components={{
-          event: (props) => (
-            <CustomEvent
-              {...props}
-              onDelete={(partitaId) => {
-                handleDeletePartita(partitaId);
-              }}
-            />
-          ),
-        }}
-        messages={{
-          next: 'Avanti',
-          previous: 'Indietro',
-          today: 'Oggi',
-          month: 'Mese',
-          week: 'Settimana',
-          day: 'Giorno',
-          agenda: 'Agenda',
+  localizer={localizer}
+  events={eventi}
+  startAccessor="start"
+  endAccessor="end"
+  selectable
+  onSelectSlot={handleSelectSlot}
+  onSelectEvent={handleEventClick}
+  style={{ height: 800 }} // Aumenta l'altezza
+  views={['month', 'week', 'day']}
+  defaultView="month"
+  components={{
+    event: (props) => (
+      <CustomEvent
+        {...props}
+        onDelete={(partitaId) => {
+          handleDeletePartita(partitaId);
         }}
       />
+    ),
+    toolbar: (toolbar) => (
+      <div className="rbc-toolbar">
+        <span className="rbc-btn-group">
+          <Button variant="contained" color="primary" onClick={() => toolbar.onNavigate('TODAY')}>
+            Oggi
+          </Button>
+          <Button variant="contained" color="primary" onClick={() => toolbar.onNavigate('PREV')}>
+            Indietro
+          </Button>
+          <Button variant="contained" color="primary" onClick={() => toolbar.onNavigate('NEXT')}>
+            Avanti
+          </Button>
+        </span>
+        <span className="rbc-toolbar-label" style={{ fontFamily: 'Shadows Into Light, cursive', color: '#838072' }}>
+          {toolbar.label}
+        </span>
+        <span className="rbc-btn-group">
+          <Button variant="contained" color="secondary" onClick={() => toolbar.onView('month')}>
+            Mese
+          </Button>
+          <Button variant="contained" color="secondary" onClick={() => toolbar.onView('week')}>
+            Settimana
+          </Button>
+          <Button variant="contained" color="secondary" onClick={() => toolbar.onView('day')}>
+            Giorno
+          </Button>
+        </span>
+      </div>
+    ),
+  }}
+  messages={{
+    next: 'Avanti',
+    previous: 'Indietro',
+    today: 'Oggi',
+    month: 'Mese',
+    week: 'Settimana',
+    day: 'Giorno',
+    agenda: 'Agenda',
+  }}
+/>
 
       {/* Dialog per aggiungere una partita */}
       <Dialog open={openAggiungiDialog} onClose={handleCloseAggiungiDialog} maxWidth="lg" fullWidth>

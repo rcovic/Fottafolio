@@ -1,5 +1,3 @@
-// src/components/AggiungiPartita.jsx
-
 import React, { useState, useEffect } from 'react';
 import {
   Typography,
@@ -8,6 +6,10 @@ import {
   Button,
   Grid,
   Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   FormGroup,
   FormControlLabel,
   Checkbox,
@@ -24,7 +26,7 @@ import { LocalizationProvider, DatePicker } from '@mui/lab';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import itLocale from 'date-fns/locale/it';
 
-function AggiungiPartita({ selectedDate, onSuccess }) { // Riceve selectedDate tramite props
+function AggiungiPartita({ selectedDate, onSuccess }) {
   const navigate = useNavigate();
   const [data, setData] = useState(selectedDate || new Date());
   const [golBianchi, setGolBianchi] = useState(0);
@@ -41,6 +43,8 @@ function AggiungiPartita({ selectedDate, onSuccess }) { // Riceve selectedDate t
     open: false,
     message: '',
   });
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [confirmCallback, setConfirmCallback] = useState(null);
 
   useEffect(() => {
     setData(selectedDate || new Date());
@@ -57,47 +61,78 @@ function AggiungiPartita({ selectedDate, onSuccess }) { // Riceve selectedDate t
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Prevenire l'invio automatico del modulo
 
-    // Validazioni frontend
-    if (squadraBianchi.length === 0 || squadraColorati.length === 0) {
-      setErrorSnackbar({ open: true, message: 'Seleziona almeno un giocatore per ciascuna squadra.' });
+    const sommaGolBianchi = squadraBianchi.reduce(
+      (sum, id) => sum + (goalsBianchi[id] || 0),
+      0
+    );
+    const sommaGolColorati = squadraColorati.reduce(
+      (sum, id) => sum + (goalsColorati[id] || 0),
+      0
+    );
+
+    const sommaAssistBianchi = squadraBianchi.reduce(
+      (sum, id) => sum + (assistsBianchi[id] || 0),
+      0
+    );
+    const sommaAssistColorati = squadraColorati.reduce(
+      (sum, id) => sum + (assistsColorati[id] || 0),
+      0
+    );
+
+    // Controllo per i gol della squadra Bianchi
+    if (sommaGolBianchi > golBianchi) {
+      setErrorSnackbar({ open: true, message: 'La somma dei gol per i Bianchi supera i gol totali.' });
       return;
     }
 
-    if (squadraBianchi.length > 5 || squadraColorati.length > 5) {
-      setErrorSnackbar({ open: true, message: 'Non puoi selezionare più di 5 giocatori per squadra.' });
+    // Controllo per i gol della squadra Colorati
+    if (sommaGolColorati > golColorati) {
+      setErrorSnackbar({ open: true, message: 'La somma dei gol per i Colorati supera i gol totali.' });
       return;
     }
 
-    // Controlla che gol e assist siano numeri non negativi
-    for (const id of squadraBianchi) {
-      if ((goalsBianchi[id] || 0) < 0 || (assistsBianchi[id] || 0) < 0) {
-        setErrorSnackbar({ open: true, message: 'I gol e gli assist non possono essere negativi.' });
-        return;
-      }
+    // Controllo per la somma minore dei gol
+    if (sommaGolBianchi < golBianchi || sommaGolColorati < golColorati) {
+      // Mostra il pop-up di conferma
+      setConfirmCallback(() => async () => {
+        await submitPartita();
+      });
+      setOpenConfirmDialog(true);
+      return;
     }
 
-    for (const id of squadraColorati) {
-      if ((goalsColorati[id] || 0) < 0 || (assistsColorati[id] || 0) < 0) {
-        setErrorSnackbar({ open: true, message: 'I gol e gli assist non possono essere negativi.' });
-        return;
-      }
+    // Controllo per la somma degli assist: deve essere <= dei gol totali per squadra Bianchi
+    if (sommaAssistBianchi > golBianchi) {
+      setErrorSnackbar({ open: true, message: 'La somma degli assist per i Bianchi supera i gol totali.' });
+      return;
     }
 
+    // Controllo per la somma degli assist: deve essere <= dei gol totali per squadra Colorati
+    if (sommaAssistColorati > golColorati) {
+      setErrorSnackbar({ open: true, message: 'La somma degli assist per i Colorati supera i gol totali.' });
+      return;
+    }
+
+    // Se tutto è OK, invia i dati
+    submitPartita();
+  };
+
+  const submitPartita = async () => {
     try {
       const payload = {
         data: data.toISOString(),
         gol_bianchi: golBianchi,
         gol_colorati: golColorati,
         squadra_bianchi: squadraBianchi.map(id => ({
-          giocatore_id: id, // Assicurati che 'id' sia un intero
+          giocatore_id: id,
           gol: goalsBianchi[id] || 0,
           assist: assistsBianchi[id] || 0,
         })),
         squadra_colorati: squadraColorati.map(id => ({
-          giocatore_id: id, // Assicurati che 'id' sia un intero
+          giocatore_id: id,
           gol: goalsColorati[id] || 0,
           assist: assistsColorati[id] || 0,
         })),
@@ -106,13 +141,10 @@ function AggiungiPartita({ selectedDate, onSuccess }) { // Riceve selectedDate t
       await axios.post('/api/partite', payload);
       setOpenSnackbar(true);
       onSuccess(); // Notifica il componente padre del successo
+      navigate('/partite'); // Torna al calendario dopo il successo
     } catch (error) {
       console.error('Errore durante l\'aggiunta della partita:', error);
-      if (error.response && error.response.data && error.response.data.error) {
-        setErrorSnackbar({ open: true, message: error.response.data.error });
-      } else {
-        setErrorSnackbar({ open: true, message: 'Errore durante l\'aggiunta della partita.' });
-      }
+      setErrorSnackbar({ open: true, message: 'Errore durante l\'aggiunta della partita.' });
     }
   };
 
@@ -156,6 +188,11 @@ function AggiungiPartita({ selectedDate, onSuccess }) { // Riceve selectedDate t
     } else if (squadra === 'colorati') {
       setAssistsColorati(prev => ({ ...prev, [giocatoreId]: intValue }));
     }
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+    setConfirmCallback(null);
   };
 
   return (
@@ -359,6 +396,28 @@ function AggiungiPartita({ selectedDate, onSuccess }) { // Riceve selectedDate t
           </Grid>
         </Grid>
       </form>
+
+      {/* Dialog di conferma */}
+      <Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
+        <DialogTitle>Conferma Gol Inferiori ai Gol Totali</DialogTitle>
+        <DialogContent>
+          <Typography>
+            La somma dei gol segnati è inferiore ai gol totali. Sei sicuro di voler procedere?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDialog} color="secondary">Annulla</Button>
+          <Button
+            onClick={() => {
+              confirmCallback();
+              handleCloseConfirmDialog();
+            }}
+            color="primary"
+          >
+            Conferma
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar per notificare l'aggiunta */}
       <Snackbar

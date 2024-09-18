@@ -1,59 +1,224 @@
 /* src/components/CustomEvent.css */
 
+/* Stile di base per il calendario */
+.rbc-calendar {
+    background-color: #fff7dc; /* Giallo chiaro#fff8e1 */
+    border: none;
+    overflow: visible; /* Assicurati che l'overflow sia visibile */
+}
+
+/* Intestazioni dei giorni della settimana */
+.rbc-header {
+  background-color: #ffc800d5; /* Giallo più scuro */
+  color: #6a6767;
+  font-weight: bold;
+  font-family: 'Shadows Into Light', cursive;
+  padding: 10px 0;
+}
+
+/* Celle dei giorni */
+.rbc-day-bg {
+  background-color: #ffd64145; /* Verde acqua chiaro */
+  border-right: 1px solid #b2dfdb;
+}
+
+/* Giorno corrente */
+.rbc-today {
+  background-color: #ffe082;
+}
+
+/* Giorni fuori dal mese corrente */
+.rbc-off-range-bg {
+  background-color: #b2b2b2;
+}
+
+/* Hover sui giorni */
+.rbc-day-bg:hover {
+  background-color: #ffeb3b;
+  cursor: pointer;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Personalizzazione degli eventi (Post-it delle partite) */
+.rbc-event {
+  background-color: #ffd90000 ; 
+  border: 2px solid #4a4a4a00 ; 
+  border-radius: 8px;
+  font-family: 'Shadows Into Light', cursive;
+  color: #333;
+  padding: 0px; /* Aumentato il padding */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  overflow: visible; /* Assicurati che overflow sia visibile */
+  position: relative;
+  z-index: 1;
+  white-space: normal; /* Permetti al testo di andare a capo */
+  height: auto; /* Lascia che l'altezza si adatti al contenuto */
+  min-height: 40px; /* Imposta un'altezza minima */
+}
+
+.rbc-event:hover {
+  background-color: #FFC107; /* Giallo più intenso */
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  overflow: visible;
+}
+
+/* Per far sì che il post-it possa strabordare */
+.rbc-month-view .rbc-row {
+  overflow: visible;
+}
+
+/* Intestazione del calendario */
+.rbc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Bottoni nella toolbar */
+.rbc-toolbar .rbc-btn-group button {
+  margin: 0 5px;
+  font-family: 'Shadows Into Light', cursive;
+  background-color: #FFD700; /* Giallo più scuro */
+  color: #4a4a4a; /* Grigio scuro per il testo */
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.rbc-toolbar .rbc-btn-group button:hover {
+  background-color: #FFC107; /* Giallo più intenso al hover */
+  transform: scale(1.05);
+}
+
+/* Label nella toolbar */
+.rbc-toolbar-label {
+  font-size: 1.2em;
+  font-family: 'Shadows Into Light', cursive;
+  color: #838072; /* Giallo più scuro */
+}
+
+/* Stile per l'icona del trofeo */
 .post-it {
-    padding: 8px;
-    border-radius: 8px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    position: relative;
-    width: 150px; /* Regola la larghezza secondo le tue esigenze */
-    height: 80px; /* Regola l'altezza secondo le tue esigenze */
-    transform: rotate(-2deg); /* Leggera rotazione per un effetto post-it */
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+  padding: 4px; 
+  border-radius: 2px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 150px;
+  height: auto; /* Permette al contenuto di determinare l'altezza */
+  transform: rotate(-3deg);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-it:hover {
+  transform: rotate(0deg) scale(1.05);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Classe per il testo scritto a mano */
+.handwritten-font {
+  font-family: 'Shadows Into Light', cursive;
+  font-size: 16px; /* Aumentata la dimensione del font */
+  line-height: 1.6;
+  color: #333;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Classe per il testo della squadra vincente */
+.winner-text {
+  font-weight: bold;
+}
+
+/* Pulsante di eliminazione nascosto per impostazione predefinita */
+.delete-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* Mostrare il pulsante di eliminazione al passaggio del mouse */
+.post-it:hover .delete-button {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Stile per l'icona del trofeo, ora sempre visibile e leggermente più a sinistra */
+.trophy-icon {
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  z-index: 1;
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+/* Migliorare la visibilità del trofeo */
+.trophy-icon svg {
+  stroke: #000;
+  stroke-width: 1px;
+}
+
+/* Responsive - per dispositivi mobili */
+@media (max-width: 768px) {
+  .rbc-calendar {
+    font-size: 12px;
   }
-  
-  .post-it:hover {
-    transform: rotate(0deg) scale(1.05);
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+
+  .rbc-header {
+    font-size: 0.9em;
   }
-  
-  /* Classe per il testo scritto a mano */
+
+  .rbc-event {
+    font-size: 10px;
+  }
+
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rbc-toolbar .rbc-btn-group {
+    margin-bottom: 10px;
+  }
+
+  /* Adjust post-it size for smaller screens */
+  .post-it {
+    width: 120px;
+    height: auto; /* Lascia che l'altezza si adatti */
+  }
+
   .handwritten-font {
-    font-family: 'Shadows Into Light', cursive;
-    font-size: 14px; /* Regola la dimensione del font secondo le tue esigenze */
-    line-height: 1.4;
-    color: #333; /* Colore del testo */
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    font-size: 12px;
   }
-  
-  /* Classe per il testo della squadra vincente */
-  .winner-text {
-    font-weight: bold;
-  }
-  
-  /* Pulsante di eliminazione nascosto per impostazione predefinita */
-  .delete-button {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-  }
-  
-  /* Mostrare il pulsante di eliminazione al passaggio del mouse */
-  .post-it:hover .delete-button {
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  /* Stile per l'icona del trofeo, ora sempre visibile */
+
   .trophy-icon {
-    position: absolute;
-    top: 4px;
-    right: 12px; /* Spostato leggermente più a sinistra */
-    z-index: 1;
-    transform: scale(1);
-    transition: transform 0.3s ease;
+    right: 8px;
+    font-size: 20px;
   }
-  
+
+  .custom-event {
+    background-color: var(--event-color);
+    color: black;
+    padding: 10px;
+    border-radius: 8px;
+    overflow: visible;
+    position: relative;
+    height: auto;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .custom-event .event-trophy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 1.5rem;
+    color: inherit;
+  }
+}

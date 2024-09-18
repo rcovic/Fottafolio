@@ -1,20 +1,30 @@
-// src/theme.js
 import { createTheme } from '@mui/material/styles';
+import { yellow, grey } from '@mui/material/colors';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#FBC02D', // Un giallo più morbido
+      main: yellow[700], // Colore primario (es. giallo scuro)
     },
     secondary: {
-      main: '#FFFFFF', // Bianco per contrasto
+      main: grey[800], // Colore secondario (es. grigio scuro)
     },
-    background: {
-      default: '#F5F5F5', // Grigio chiaro per lo sfondo
+    text: {
+      primary: '#000', // Assicurati che il testo primario sia visibile
+      secondary: grey[600], // Testo secondario visibile per i tab non selezionati
     },
   },
-  typography: {
-    fontFamily: 'Roboto, sans-serif',
+  components: {
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          color: grey[600], // Colore per i tab non selezionati
+          '&.Mui-selected': {
+            color: yellow[700], // Colore del tab selezionato
+          },
+        },
+      },
+    },
   },
 });
 

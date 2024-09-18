@@ -12,7 +12,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import Giocatori from './components/Giocatori';
 import AggiungiPartita from './components/AggiungiPartita';
-import CalendarioPartite from './components/CalendarioPartite'; // Importa il nuovo componente
+import CalendarioPartite from './components/CalendarioPartite';
 import GolAssist from './components/GolAssist';
 import Statistiche from './components/Statistiche';
 import DettagliPartita from './components/DettagliPartita'; 
@@ -23,15 +23,12 @@ function App() {
     <>
       <AppBar position="static" color="primary">
         <Toolbar>
-          {/* Icona del menu, utile se in futuro vuoi aggiungere un drawer */}
           <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          {/* Titolo dell'applicazione */}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#000' }}>
             Fottafolio
           </Typography>
-          {/* Pulsanti di navigazione */}
           <Button color="inherit" component={Link} to="/">
             Home
           </Button>

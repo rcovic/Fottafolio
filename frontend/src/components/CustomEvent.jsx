@@ -25,7 +25,7 @@ function CustomEvent({ event, onDelete }) {
   // Imposta il colore del trofeo in base al vincitore
   const trophyColor = winner === 'colorati' ? '#000000' : winner === 'bianchi' ? '#FFFFFF' : 'transparent';
 
-  // Stile per ingrandire e spostare il trofeo
+  // Stile per ingrandire e posizionare il trofeo
   const trophyStyle = {
     color: trophyColor,
     fontSize: '24px', // Più grande
@@ -69,7 +69,10 @@ function CustomEvent({ event, onDelete }) {
       <IconButton
         size="small"
         color="error"
-        onClick={() => onDelete(event.partitaId)}
+        onClick={(e) => {
+          e.stopPropagation(); // Previene il trigger del click sull'evento
+          onDelete(event.partitaId);
+        }}
         className="delete-button"
       >
         <DeleteIcon fontSize="small" />
