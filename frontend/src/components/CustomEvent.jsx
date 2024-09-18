@@ -1,37 +1,32 @@
 // src/components/CustomEvent.jsx
 
-import React, { useState } from 'react';
-import { IconButton, Typography, Box } from '@mui/material';
-import { Delete } from '@mui/icons-material';
+import React from 'react';
+import { Card, Typography, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import './CustomEvent.css'; // Assicurati che il file CSS esista
+
+// Lista di colori per i post-it
+const postItColors = ['#FFEB3B', '#FFCDD2', '#BBDEFB', '#C8E6C9', '#FFE0B2', '#E1BEE7'];
 
 function CustomEvent({ event, onDelete }) {
-  const [hover, setHover] = useState(false);
-
-  const handleDelete = (e) => {
-    e.stopPropagation(); // Previene la navigazione ai dettagli
-    onDelete(event.partitaId);
-  };
+  // Determina il colore basato sull'ID dell'evento per avere consistenza
+  const colorIndex = event.id % postItColors.length;
+  const backgroundColor = postItColors[colorIndex];
 
   return (
-    <Box
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      sx={{ position: 'relative', cursor: 'pointer' }}
-    >
-      <Typography variant="body2">
+    <Card className="post-it" style={{ backgroundColor }}>
+      <Typography variant="body2" className="handwritten-font">
         {event.title}
       </Typography>
-      {hover && (
-        <IconButton
-          size="small"
-          color="error"
-          onClick={handleDelete}
-          sx={{ position: 'absolute', top: 0, right: 0 }}
-        >
-          <Delete fontSize="small" />
-        </IconButton>
-      )}
-    </Box>
+      <IconButton
+        size="small"
+        color="error"
+        onClick={() => onDelete(event.partitaId)}
+        className="delete-button"
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </Card>
   );
 }
 

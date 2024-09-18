@@ -19,6 +19,7 @@ import itLocale from 'date-fns/locale/it';
 import { useNavigate } from 'react-router-dom';
 import CustomEvent from './CustomEvent'; // Importa il componente personalizzato
 import AggiungiPartita from './AggiungiPartita'; // Importa il componente esistente
+import './CustomEvent.css'; // Importa dopo
 
 const locales = {
   'it': itLocale,
@@ -54,7 +55,7 @@ function CalendarioPartite() {
       const response = await axios.get('/api/partite');
       const eventiCalendario = response.data.map((partita) => ({
         id: partita.id,
-        title: `Partita: Bianchi ${partita.gol_bianchi} - Colorati ${partita.gol_colorati}`,
+        title: `Bianchi ${partita.gol_bianchi} - Colorati ${partita.gol_colorati}`,
         start: parseISO(partita.data),
         end: parseISO(partita.data),
         allDay: true,

@@ -1,0 +1,33 @@
+/* src/components/CustomEvent.css */
+
+.post-it {
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    position: relative;
+    width: 150px; /* Regola la larghezza secondo le tue esigenze */
+    height: 80px; /* Regola l'altezza secondo le tue esigenze */
+    transform: rotate(-2deg); /* Leggera rotazione per un effetto post-it */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .post-it:hover {
+    transform: rotate(0deg) scale(1.05);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  }
+  
+  .handwritten-font {
+    font-family: 'Shadows Into Light', cursive;
+    font-size: 14px; /* Regola la dimensione del font secondo le tue esigenze */
+    line-height: 1.4;
+    color: #333; /* Colore del testo */
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+  }
+  
+  .delete-button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+  }
+  
