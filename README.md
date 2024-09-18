@@ -14,12 +14,13 @@ TODO:
 -Valutatore formazioni con AI 
 -Migliorare GUI rendendola più bella
 -Possibilità di inserire foto/video per partita
--Scheda giocatore
--And much more..
+-Scheda giocatorie
+-technical things (refractoring codice + refractoring classi ecc ) ..
 
 Prerequisiti per installarlo:
 -Python
 -Node.js (ed npm)
 
 npm install per installare le dipendenze contenute in package-json
+verrà creata una cartella node modules NON COMMITTARE LA CARTELLA NODE MODULES  (ci dovrebbe essere un git ignore). 
 si consiglia di creare una virtual environment python prima di installare i vari pacchetti per backend. 
