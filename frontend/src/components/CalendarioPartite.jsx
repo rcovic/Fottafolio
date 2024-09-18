@@ -55,6 +55,8 @@ function CalendarioPartite() {
       const response = await axios.get('/api/partite');
       const eventiCalendario = response.data.map((partita) => ({
         id: partita.id,
+        gol_bianchi: partita.gol_bianchi,
+        gol_colorati: partita.gol_colorati,
         title: `Bianchi ${partita.gol_bianchi} - Colorati ${partita.gol_colorati}`,
         start: parseISO(partita.data),
         end: parseISO(partita.data),

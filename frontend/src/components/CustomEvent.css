@@ -17,6 +17,7 @@
     box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
   }
   
+  /* Classe per il testo scritto a mano */
   .handwritten-font {
     font-family: 'Shadows Into Light', cursive;
     font-size: 14px; /* Regola la dimensione del font secondo le tue esigenze */
@@ -25,9 +26,34 @@
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
   }
   
+  /* Classe per il testo della squadra vincente */
+  .winner-text {
+    font-weight: bold;
+  }
+  
+  /* Pulsante di eliminazione nascosto per impostazione predefinita */
   .delete-button {
     position: absolute;
     top: 4px;
     right: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  
+  /* Mostrare il pulsante di eliminazione al passaggio del mouse */
+  .post-it:hover .delete-button {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Stile per l'icona del trofeo, ora sempre visibile */
+  .trophy-icon {
+    position: absolute;
+    top: 4px;
+    right: 12px; /* Spostato leggermente più a sinistra */
+    z-index: 1;
+    transform: scale(1);
+    transition: transform 0.3s ease;
   }
   
