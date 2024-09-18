@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
+import logging
 
 app = Flask(__name__)
 CORS(app)  # Abilita le richieste CORS per permettere al frontend di comunicare con il backend
+
+# Configura il logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Funzione per ottenere la connessione al database
 def get_db_connection():
@@ -51,49 +56,68 @@ def api_giocatori():
 ## Gestione delle partite
 
 @app.route('/api/partite', methods=['GET', 'POST'])
-def api_partite():
-    conn = get_db_connection()
+def handle_partite():
     if request.method == 'GET':
-        partite = query_db(conn, 'SELECT * FROM partite')
-        conn.close()
-        return jsonify([dict(ix) for ix in partite])
+        with get_db_connection() as conn:
+            partite = conn.execute('SELECT * FROM partite').fetchall()
+            partite_list = [dict(partita) for partita in partite]
+        return jsonify(partite_list), 200
+
     elif request.method == 'POST':
-        data = request.json.get('data')
-        gol_bianchi = request.json.get('gol_bianchi')
-        gol_colorati = request.json.get('gol_colorati')
-        squadra_bianchi = request.json.get('squadra_bianchi', [])
-        squadra_colorati = request.json.get('squadra_colorati', [])
+        data = request.json
+        data_partita = data.get('data')
+        gol_bianchi = data.get('gol_bianchi', 0)
+        gol_colorati = data.get('gol_colorati', 0)
+        squadra_bianchi = data.get('squadra_bianchi', [])
+        squadra_colorati = data.get('squadra_colorati', [])
 
         # Validazioni
-        if not data or not is_valid_number(gol_bianchi) or not is_valid_number(gol_colorati):
-            conn.close()
-            return jsonify({'error': 'Dati non validi'}), 400
-        if len(squadra_bianchi) > 5 or len(squadra_colorati) > 5:
-            conn.close()
-            return jsonify({'error': 'Ogni squadra può avere al massimo 5 giocatori'}), 400
+        if not data_partita:
+            return jsonify({'error': 'Data partita richiesta.'}), 400
 
         try:
-            # Inserisci la partita
-            cur = conn.cursor()
-            cur.execute('INSERT INTO partite (data, gol_bianchi, gol_colorati) VALUES (?, ?, ?)',
-                        [data, gol_bianchi, gol_colorati])
-            partita_id = cur.lastrowid
+            # Inizio di una transazione
+            with get_db_connection() as conn:
+                # Verifica se esiste già una partita nella stessa data
+                existing_partita = conn.execute('SELECT * FROM partite WHERE data = ?', (data_partita,)).fetchone()
+                if existing_partita:
+                    return jsonify({'error': 'Esiste già una partita in questa data.'}), 400
 
-            # Inserisci partecipazioni
-            for giocatore_id in squadra_bianchi:
-                cur.execute('INSERT INTO partecipazioni (partita_id, giocatore_id, squadra, gol, assist) VALUES (?, ?, ?, ?, ?)',
-                            [partita_id, giocatore_id, 'Bianchi', 0, 0])
-            for giocatore_id in squadra_colorati:
-                cur.execute('INSERT INTO partecipazioni (partita_id, giocatore_id, squadra, gol, assist) VALUES (?, ?, ?, ?, ?)',
-                            [partita_id, giocatore_id, 'Colorati', 0, 0])
+                # Inserisci la nuova partita
+                cur = conn.execute(
+                    'INSERT INTO partite (data, gol_bianchi, gol_colorati) VALUES (?, ?, ?)',
+                    (data_partita, gol_bianchi, gol_colorati)
+                )
+                partita_id = cur.lastrowid
 
-            conn.commit()
-            conn.close()
-            return jsonify({'partita_id': partita_id}), 201
-        except sqlite3.IntegrityError as e:
-            conn.rollback()
-            conn.close()
-            return jsonify({'error': str(e)}), 400
+                # Inserisci le partecipazioni per Squadra Bianchi
+                for giocatore in squadra_bianchi:
+                    giocatore_id = giocatore.get('giocatore_id')
+                    gol = giocatore.get('gol', 0)
+                    assist = giocatore.get('assist', 0)
+                    conn.execute(
+                        'INSERT INTO partecipazioni (partita_id, giocatore_id, squadra, gol, assist) VALUES (?, ?, ?, ?, ?)',
+                        (partita_id, giocatore_id, 'Bianchi', gol, assist)
+                    )
+
+                # Inserisci le partecipazioni per Squadra Colorati
+                for giocatore in squadra_colorati:
+                    giocatore_id = giocatore.get('giocatore_id')
+                    gol = giocatore.get('gol', 0)
+                    assist = giocatore.get('assist', 0)
+                    conn.execute(
+                        'INSERT INTO partecipazioni (partita_id, giocatore_id, squadra, gol, assist) VALUES (?, ?, ?, ?, ?)',
+                        (partita_id, giocatore_id, 'Colorati', gol, assist)
+                    )
+
+                conn.commit()
+            return jsonify({'message': 'Partita aggiunta con successo', 'id': partita_id}), 201
+        except sqlite3.OperationalError as e:
+            print(f"Database error: {e}")
+            return jsonify({'error': 'Errore del database.'}), 500
+        except Exception as e:
+            print(f"General error: {e}")
+            return jsonify({'error': 'Errore durante l\'aggiunta della partita.'}), 500
 
 ## Gestione dei gol e assist per partita
 
@@ -191,8 +215,6 @@ def api_elimina_partita(partita_id):
     conn.commit()
     conn.close()
     return jsonify({'message': 'Partita eliminata'}), 200
-
-## Eliminazione delle partite e Recupero dei dettagli
 
 @app.route('/api/partite/<int:partita_id>', methods=['GET', 'DELETE'])
 def handle_partita(partita_id):
@@ -333,4 +355,4 @@ if __name__ == '__main__':
     ''')
     conn.commit()
     conn.close()
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)

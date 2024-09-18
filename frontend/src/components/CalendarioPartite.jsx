@@ -18,6 +18,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import itLocale from 'date-fns/locale/it';
 import { useNavigate } from 'react-router-dom';
 import CustomEvent from './CustomEvent'; // Importa il componente personalizzato
+import AggiungiPartita from './AggiungiPartita'; // Importa il componente esistente
 
 const locales = {
   'it': itLocale,
@@ -33,12 +34,15 @@ const localizer = dateFnsLocalizer({
 
 function CalendarioPartite() {
   const [eventi, setEventi] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [openAggiungiDialog, setOpenAggiungiDialog] = useState(false);
+  const [dataSelezionata, setDataSelezionata] = useState(null);
   const [partitaDaEliminare, setPartitaDaEliminare] = useState(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [errorSnackbar, setErrorSnackbar] = useState(false);
+  const [errorSnackbar, setErrorSnackbar] = useState({
+    open: false,
+    message: '',
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,20 +63,36 @@ function CalendarioPartite() {
       setEventi(eventiCalendario);
     } catch (error) {
       console.error('Errore nel recupero delle partite:', error);
-      setErrorSnackbar(true);
+      setErrorSnackbar({ open: true, message: 'Errore nel recupero delle partite.' });
     }
   };
 
   const handleSelectSlot = ({ start }) => {
-    setSelectedDate(start);
+    // Verifica se esiste già una partita in questa data
+    const hasMatch = eventi.some(evento => {
+      const eventoDate = new Date(evento.start).setHours(0,0,0,0);
+      const selectedDate = new Date(start).setHours(0,0,0,0);
+      return eventoDate === selectedDate;
+    });
+
+    if (hasMatch) {
+      setErrorSnackbar({ open: true, message: 'Esiste già una partita in questa data.' });
+      return;
+    }
+
+    setDataSelezionata(start);
+    setOpenAggiungiDialog(true);
   };
 
-  const handleCloseDialog = () => {
-    setSelectedDate(null);
+  const handleCloseAggiungiDialog = () => {
+    setOpenAggiungiDialog(false);
+    setDataSelezionata(null);
   };
 
-  const handleAggiungiPartita = () => {
-    navigate('/aggiungi_partita', { state: { dataSelezionata: selectedDate } });
+  const handleAggiungiPartitaSuccess = () => {
+    setOpenSnackbar(true);
+    fetchPartite();
+    handleCloseAggiungiDialog();
   };
 
   const handleDeletePartita = (partitaId) => {
@@ -89,7 +109,7 @@ function CalendarioPartite() {
         setOpenConfirmDialog(false);
       } catch (error) {
         console.error('Errore durante l\'eliminazione della partita:', error);
-        setErrorSnackbar(true);
+        setErrorSnackbar({ open: true, message: 'Errore durante l\'eliminazione della partita.' });
         setOpenConfirmDialog(false);
       }
     }
@@ -110,16 +130,18 @@ function CalendarioPartite() {
         startAccessor="start"
         endAccessor="end"
         selectable
-        views={['month', 'week', 'day']}
-        defaultView="month"
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleEventClick}
         style={{ height: 600 }}
+        views={['month', 'week', 'day']}
+        defaultView="month"
         components={{
           event: (props) => (
             <CustomEvent
               {...props}
-              onDelete={handleDeletePartita}
+              onDelete={(partitaId) => {
+                handleDeletePartita(partitaId);
+              }}
             />
           ),
         }}
@@ -130,8 +152,20 @@ function CalendarioPartite() {
           month: 'Mese',
           week: 'Settimana',
           day: 'Giorno',
+          agenda: 'Agenda',
         }}
       />
+
+      {/* Dialog per aggiungere una partita */}
+      <Dialog open={openAggiungiDialog} onClose={handleCloseAggiungiDialog} maxWidth="lg" fullWidth>
+        <DialogTitle>Aggiungi Partita</DialogTitle>
+        <DialogContent>
+          <AggiungiPartita selectedDate={dataSelezionata} onSuccess={handleAggiungiPartitaSuccess} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAggiungiDialog}>Annulla</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Dialog di conferma per eliminare una partita */}
       <Dialog open={openConfirmDialog} onClose={() => setOpenConfirmDialog(false)}>
@@ -149,21 +183,23 @@ function CalendarioPartite() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar per notificare l'eliminazione */}
+      {/* Snackbar per notificare l'aggiunta o l'eliminazione */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
         onClose={() => setOpenSnackbar(false)}
-        message="Partita eliminata con successo!"
+        message="Operazione completata con successo!"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
 
       {/* Snackbar per errori */}
       <Snackbar
-        open={errorSnackbar}
+        open={errorSnackbar.open}
         autoHideDuration={3000}
-        onClose={() => setErrorSnackbar(false)}
-        message="Si è verificato un errore."
-        color="error"
+        onClose={() => setErrorSnackbar({ ...errorSnackbar, open: false })}
+        message={errorSnackbar.message || "Si è verificato un errore."}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ color: 'error.main' }}
       />
     </Paper>
   );

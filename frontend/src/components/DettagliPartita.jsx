@@ -97,7 +97,7 @@ function DettagliPartita() {
             </TableHead>
             <TableBody>
               {partita.partecipazioni.map((partecipazione) => (
-                <TableRow key={partecipazione.id}>
+                <TableRow key={partecipazione.giocatore_id}>
                   <TableCell>{partecipazione.nome}</TableCell>
                   <TableCell>{partecipazione.squadra}</TableCell>
                   <TableCell>{partecipazione.gol}</TableCell>
