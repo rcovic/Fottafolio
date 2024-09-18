@@ -22,7 +22,9 @@ Come DB ho usato un SQLlite essendo gratuito e non avendo bisogno di tenere una 
 - Python
 - Node.js (ed npm)
 
-```npm install ``` per installare le dipendenze contenute in package-json
-```python ./main.py ``` per fare partire il backend (attualmente su localhost:5000) 
-verrà creata una cartella node modules NON COMMITTARE LA CARTELLA NODE MODULES  (ci dovrebbe essere un git ignore). 
+```python ./main.py ``` per fare partire il backend (attualmente su localhost:5000) <br>
+```npm install ``` per installare le dipendenze contenute in package-json <br>
+```npm start ``` per fare partire il frontend (su localhost:3000) <br>
+
+Verrà creata una cartella node modules NON COMMITTARE LA CARTELLA NODE MODULES  (ci dovrebbe essere un git ignore). 
 si consiglia di creare una virtual environment python prima di installare i vari pacchetti per backend. 
