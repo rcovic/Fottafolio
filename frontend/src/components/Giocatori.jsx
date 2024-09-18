@@ -1,30 +1,32 @@
 // src/components/Giocatori.jsx
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Typography,
   Paper,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Snackbar,
   Grid,
   Card,
   CardContent,
   CardActions,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
 } from '@mui/material';
-import { Delete } from '@mui/icons-material';
+import axios from 'axios';
 
 function Giocatori() {
   const [giocatori, setGiocatori] = useState([]);
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [selectedGiocatore, setSelectedGiocatore] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [nomeGiocatore, setNomeGiocatore] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [errorSnackbar, setErrorSnackbar] = useState(false);
+  const [errorSnackbar, setErrorSnackbar] = useState({
+    open: false,
+    message: '',
+  });
 
   useEffect(() => {
     fetchGiocatori();
@@ -36,28 +38,50 @@ function Giocatori() {
       setGiocatori(response.data);
     } catch (error) {
       console.error('Errore nel recupero dei giocatori:', error);
-      setErrorSnackbar(true);
+      setErrorSnackbar({ open: true, message: 'Errore nel recupero dei giocatori.' });
     }
   };
 
-  const handleEliminaGiocatore = async () => {
-    if (selectedGiocatore) {
-      try {
-        await axios.delete(`/api/giocatori/${selectedGiocatore}`);
-        setOpenSnackbar(true);
-        fetchGiocatori(); // Ricarica la lista dei giocatori dopo l'eliminazione
-        setOpenConfirmDialog(false);
-      } catch (error) {
-        console.error('Errore durante l\'eliminazione del giocatore:', error);
-        setErrorSnackbar(true);
-        setOpenConfirmDialog(false);
+  const handleOpenDialog = () => {
+    setNomeGiocatore('');
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleAggiungiGiocatore = async () => {
+    if (nomeGiocatore.trim() === '') {
+      setErrorSnackbar({ open: true, message: 'Il nome del giocatore non può essere vuoto.' });
+      return;
+    }
+
+    try {
+      const payload = { nome: nomeGiocatore.trim() };
+      const response = await axios.post('/api/giocatori', payload);
+      setGiocatori([...giocatori, { id: response.data.id, nome: nomeGiocatore.trim() }]);
+      setOpenSnackbar(true);
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Errore durante l\'aggiunta del giocatore:', error);
+      if (error.response && error.response.data && error.response.data.error) {
+        setErrorSnackbar({ open: true, message: error.response.data.error });
+      } else {
+        setErrorSnackbar({ open: true, message: 'Errore durante l\'aggiunta del giocatore.' });
       }
     }
   };
 
-  const handleOpenConfirmDialog = (giocatoreId) => {
-    setSelectedGiocatore(giocatoreId);
-    setOpenConfirmDialog(true);
+  const handleDeleteGiocatore = async (giocatoreId) => {
+    try {
+      await axios.delete(`/api/giocatori/${giocatoreId}`);
+      setGiocatori(giocatori.filter(g => g.id !== giocatoreId));
+      setOpenSnackbar(true);
+    } catch (error) {
+      console.error('Errore durante l\'eliminazione del giocatore:', error);
+      setErrorSnackbar({ open: true, message: 'Errore durante l\'eliminazione del giocatore.' });
+    }
   };
 
   return (
@@ -65,59 +89,74 @@ function Giocatori() {
       <Typography variant="h5" gutterBottom>
         Lista Giocatori
       </Typography>
+      
+      {/* Pulsante per aggiungere un nuovo giocatore */}
+      <Button variant="contained" color="primary" onClick={handleOpenDialog} sx={{ marginBottom: 2 }}>
+        Aggiungi Giocatore
+      </Button>
+      
+      {/* Griglia di giocatori */}
       <Grid container spacing={2}>
         {giocatori.map((giocatore) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={giocatore.id}>
+          <Grid item xs={12} sm={6} md={4} key={giocatore.id}>
             <Card>
               <CardContent>
-                <Typography variant="h6" component="div">
-                  {giocatore.nome}
-                </Typography>
+                <Typography variant="h6">{giocatore.nome}</Typography>
               </CardContent>
               <CardActions>
-                <IconButton
+                <Button
+                  size="small"
                   color="error"
-                  onClick={() => handleOpenConfirmDialog(giocatore.id)}
+                  onClick={() => handleDeleteGiocatore(giocatore.id)}
                 >
-                  <Delete />
-                </IconButton>
+                  Elimina
+                </Button>
               </CardActions>
             </Card>
           </Grid>
         ))}
       </Grid>
 
-      {/* Dialog di conferma per eliminare un giocatore */}
-      <Dialog open={openConfirmDialog} onClose={() => setOpenConfirmDialog(false)}>
-        <DialogTitle>Conferma Eliminazione</DialogTitle>
+      {/* Dialog per aggiungere un nuovo giocatore */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Aggiungi Nuovo Giocatore</DialogTitle>
         <DialogContent>
-          <Typography>
-            Sei sicuro di voler eliminare questo giocatore?
-          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nome Giocatore"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={nomeGiocatore}
+            onChange={(e) => setNomeGiocatore(e.target.value)}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenConfirmDialog(false)}>Annulla</Button>
-          <Button onClick={handleEliminaGiocatore} color="error" variant="contained">
-            Elimina
+          <Button onClick={handleCloseDialog}>Annulla</Button>
+          <Button onClick={handleAggiungiGiocatore} variant="contained" color="primary">
+            Aggiungi
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar per notificare l'eliminazione */}
+      {/* Snackbar per notifiche di successo */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
         onClose={() => setOpenSnackbar(false)}
-        message="Giocatore eliminato con successo!"
+        message="Operazione completata con successo!"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
 
-      {/* Snackbar per errori */}
+      {/* Snackbar per notifiche di errore */}
       <Snackbar
-        open={errorSnackbar}
+        open={errorSnackbar.open}
         autoHideDuration={3000}
-        onClose={() => setErrorSnackbar(false)}
-        message="Si è verificato un errore."
-        color="error"
+        onClose={() => setErrorSnackbar({ ...errorSnackbar, open: false })}
+        message={errorSnackbar.message || "Si è verificato un errore."}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ color: 'error.main' }}
       />
     </Paper>
   );
