@@ -165,6 +165,23 @@ def api_partecipazioni(partita_id):
     return jsonify([dict(ix) for ix in partecipazioni])
 
 
+# Eliminazione di un giocatore
+@app.route('/api/giocatori/<int:giocatore_id>', methods=['DELETE'])
+def api_elimina_giocatore(giocatore_id):
+    conn = get_db_connection()
+    # Controlla se il giocatore esiste prima di eliminarlo
+    giocatore = query_db(conn, 'SELECT * FROM giocatori WHERE id = ?', [giocatore_id], one=True)
+    if not giocatore:
+        conn.close()
+        return jsonify({'error': 'Giocatore non trovato'}), 404
+    
+    # Elimina il giocatore
+    query_db(conn, 'DELETE FROM giocatori WHERE id = ?', [giocatore_id])
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Giocatore eliminato'}), 200
+
+
 ## Eliminazione delle partite
 
 @app.route('/api/partite/<int:partita_id>', methods=['DELETE'])
